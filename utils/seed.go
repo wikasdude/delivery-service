@@ -4,10 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"delivery-service/models"
-	"encoding/json"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
@@ -91,14 +89,9 @@ func UpdateCampaignState(db *sql.DB, campaignID string, newState string) error {
 		return err
 	}
 
-	campaignsJSON, err := json.Marshal(campaigns)
+	err = updateRedisCache(ctx, campaigns)
 	if err != nil {
-		return err
-	}
-
-	err = RedisClient.Set(ctx, "active_campaigns", campaignsJSON, 10*time.Minute).Err()
-	if err != nil {
-		return err
+		fmt.Println("Failed to update Redis cache:", err)
 	}
 
 	return nil

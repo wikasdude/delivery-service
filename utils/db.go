@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"database/sql"
 	"delivery-service/models"
 	"fmt"
@@ -66,5 +67,10 @@ func GetCampaignsFromDB() ([]models.Campaign, error) {
 		c.Rules = &r
 		campaigns = append(campaigns, c)
 	}
+	err = updateRedisCache(context.Background(), campaigns)
+	if err != nil {
+		fmt.Println("Failed to update Redis cache:", err)
+	}
+
 	return campaigns, nil
 }
