@@ -9,7 +9,7 @@ Golang service for campaign delivery, with caching and targeting rules.
 - Auto-updates cache when campaign state changes
 
 ## Tech Stack
-- **Golang** (Fiber/Gin)
+- **Golang** 
 - **PostgreSQL** for persistence
 - **Redis** for caching
 
