@@ -34,7 +34,11 @@ func Gethandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := context.Background()
+	start := time.Now()
+
 	cachedData, err := utils.RedisClient.Get(ctx, "active_campaigns").Result()
+	elapsed := time.Since(start)
+	fmt.Printf("Redis GET operation took: %v\n", elapsed)
 	var campaigns []models.Campaign
 	if err == nil {
 		// Redis cache hit, unmarshal JSON data
@@ -47,7 +51,12 @@ func Gethandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil || len(campaigns) == 0 {
 		fmt.Println("Fetching campaigns from DB")
+		start := time.Now()
+
 		campaigns, err = utils.GetCampaignsFromDB()
+
+		elapsed := time.Since(start)
+		fmt.Printf("Database fetch operation took: %v\n", elapsed)
 		if err != nil {
 			http.Error(w, `{"error": "failed to fetch campaigns"}`, http.StatusInternalServerError)
 			return
