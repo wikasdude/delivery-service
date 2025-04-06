@@ -9,9 +9,50 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
+var (
+	totalRequests = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "delivery_requests_total",
+			Help: "Total number of delivery requests",
+		},
+		[]string{"method"},
+	)
+	requestDuration = prometheus.NewHistogram(
+		prometheus.HistogramOpts{
+			Name:    "delivery_request_duration_seconds",
+			Help:    "Histogram of request durations",
+			Buckets: prometheus.DefBuckets,
+		},
+	)
+)
+var (
+	errorRequests = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "delivery_errors_total",
+			Help: "Total number of delivery errors",
+		},
+		[]string{"error_type"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(totalRequests)
+	prometheus.MustRegister(requestDuration)
+	prometheus.MustRegister(errorRequests)
+}
+
 func Gethandler(w http.ResponseWriter, r *http.Request) {
+
+	start := time.Now()
+	totalRequests.WithLabelValues(r.Method).Inc()
+	defer func() {
+		duration := time.Since(start).Seconds()
+		requestDuration.Observe(duration)
+	}()
 	fmt.Println("inside get handler")
 	if r.Method != http.MethodGet {
 		http.Error(w, "invalid method request", http.StatusMethodNotAllowed)
@@ -22,19 +63,24 @@ func Gethandler(w http.ResponseWriter, r *http.Request) {
 	os := r.URL.Query().Get("os")
 	fmt.Println(appID, country, os)
 	if appID == "" {
+		errorRequests.WithLabelValues("missing_app").Inc()
 		http.Error(w, `{"error": "missing app param"}`, http.StatusBadRequest)
 		return
 	}
 	if country == "" {
+
+		errorRequests.WithLabelValues("missing_country").Inc()
 		http.Error(w, `{"error": "missing country param"}`, http.StatusBadRequest)
 		return
 	}
 	if os == "" {
+		errorRequests.WithLabelValues("missing_os").Inc()
+		fmt.Println("os missed")
 		http.Error(w, `{"error": "missing os param"}`, http.StatusBadRequest)
 		return
 	}
 	ctx := context.Background()
-	start := time.Now()
+	start = time.Now()
 
 	cachedData, err := utils.RedisClient.Get(ctx, "active_campaigns").Result()
 	elapsed := time.Since(start)
