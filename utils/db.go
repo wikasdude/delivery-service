@@ -27,7 +27,7 @@ func connectDB() (*sql.DB, error) {
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
-	fmt.Println("✅ Connected to PostgreSQL")
+	fmt.Println("Connected to PostgreSQL")
 	return db, nil
 }
 

@@ -18,6 +18,7 @@ Golang service for campaign delivery, with caching and targeting rules.
 1. Clone the repo:
    git clone https://github.com/wikasdude/delivery-service.git
    cd delivery-service
+2. Please download postgresql and Redis server in your local machine.set the credentials and execute the create table commands.   
 
    for starting the microservice
    run : go run cmd/main.go
